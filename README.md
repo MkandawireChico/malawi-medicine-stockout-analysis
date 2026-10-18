@@ -1,129 +1,174 @@
-# Essential Medicines Stock-Out Analysis & Forecasting Dashboard
-## Salima District, Malawi (Synthetic Portfolio Dataset)
+# Malawi Medicine Stock-Out Analytics Platform
 
-## Project Overview
+A portfolio project for exploring medicine inventory, reporting quality, and stock-out risk across a synthetic district-level health-facility network in Malawi. The repository now brings together an exploratory Jupyter analysis, a reusable Python workflow, a Streamlit application, SQL examples, and a Power BI dashboard.
 
-This project analyses essential-medicine stock availability across health facilities in Salima District, Malawi, using a **synthetic** but realistically simulated dataset: a 365-day daily stock ledger aggregated into a monthly Facility x Medicine reporting table. It moves beyond data cleaning (Project 1) into operational/inventory analytics: consumption analysis, stock-out detection, overstock and expiry-risk identification, delayed-delivery impact, and a modest stock-out risk classifier.
+The project is intended to demonstrate how stock movement records can be checked and translated into inventory indicators for review. It is not an operational supply-chain system, and its results must not be interpreted as actual medicine availability.
 
-Built as a portfolio demonstration for Data Technician, Supply Chain/Logistics Analyst, and Data Analyst roles in the health sector.
+## Project Goals
 
-**Facility names are real** — 10 verified health facilities in Salima District, sourced from the World Bank's Malawi Master Health Facility List (Salima District Hospital plus 9 Government/CHAM health centres). **All stock levels, consumption figures, deliveries, and stock-outs are entirely synthetic**, generated programmatically with a fixed random seed. Nothing in this project represents actual medicine availability at any real facility.
+The analysis and tools address questions such as:
 
-## Problem Statement
+- Which facility-medicine combinations have the lowest stock coverage?
+- Which records violate expected inventory accounting or need data-quality review?
+- How do lead time, safety stock, and consumption relate to simple reorder guidance?
+- How do alternative demand and delivery assumptions change the simulated inventory picture?
+- How can results be explored in a notebook, CSV workflow, Streamlit app, or Power BI report?
 
-Health facilities need reliable availability of essential medicines. Poor stock management, unpredictable consumption, delayed replenishment, and inaccurate inventory records all contribute to stock-outs — and, just as importantly, to the less-discussed opposite problem of overstocking, which ties up resources and increases expiry risk. This project demonstrates how a Data Technician could identify both problems systematically and turn the result into a prioritized, actionable dashboard for a District Health Office.
+## What Is Included
 
-## Objectives
+| Area | Current implementation |
+| --- | --- |
+| Exploratory analysis | Jupyter notebook, a processed monthly summary, and exported analytical charts |
+| Synthetic data | Reproducible daily ledger generator with baseline, delayed-delivery, high-demand, and improved-policy outputs |
+| Data quality | Ledger validation for required columns, duplicate keys, invalid dates, negative balances, and accounting discrepancies |
+| Inventory analytics | Days-of-stock, stock status, reorder point, and reorder quantity calculations |
+| Baseline model | Logistic-regression example trained from the generated summary data |
+| Python interface | Streamlit app for browsing generated ledgers by facility and medicine |
+| BI deliverable | Power BI `.pbix` file, page screenshots, and dashboard documentation |
+| SQL examples | Example queries for risk ranking, stock-out days, delivery delays, and reorder review |
+| Automated checks | Pytest coverage for core inventory calculations and ledger validation |
 
-1. Simulate a realistic daily stock ledger and aggregate it into a monthly reporting table
-2. Identify which medicines and facilities experience the most stock-outs
-3. Flag medicines currently approaching stock-out
-4. Check for overstocking and quantify expiry risk
-5. Measure the real impact of delayed deliveries on stock levels
-6. Build a modest, explainable stock-out risk classifier as a bridge toward more ML-focused portfolio projects
-7. Build a Power BI dashboard for district-level inventory monitoring and stock-out decision support
+The repository contains two related data workflows. `data/raw/` and `data/processed/` support the original notebook analysis. `data/generated/` contains files produced by the newer Python generator and is the input expected by the command-line analysis and Streamlit app.
 
-## Synthetic Dataset
+## Data and Interpretation
 
-- **10 real Salima District facilities** (Salima District Hospital + 9 Government/CHAM health centres)
-- **13 essential medicines** across 8 programme categories (analgesic, antibiotics, antimalarial, rehydration, antidiabetic, TB, HIV, diagnostics, consumables)
-- **Daily ledger:** 47,450 simulated records (facility x day x medicine, 2025) with realistic reorder logic, weekday effects, and malaria seasonality
-- **Monthly reporting table:** 1,560 records (facility x medicine x month) — the cleaned analytical table used throughout this project
+All stock balances, issues, receipts, delivery behavior, reporting patterns, and calculated outcomes are synthetic. Facility and medicine labels provide context for the demonstration; the figures do not describe actual facility performance. Do not use this dataset to make procurement, treatment, staffing, or patient-care decisions.
 
-Deliberately injected data-quality problems: missing records (including two facilities with a chronic under-reporting pattern), negative-inventory data-entry errors, duplicate transactions, and consumption outliers. Delayed deliveries (~12% of orders) are modeled directly in the simulation rather than injected afterward. Full detail in `notebooks/medicine_stockout_analysis.ipynb`, Sections 1–2.
+The ledger includes facility, medicine, date, opening stock, receipts, issues, adjustments, losses, closing stock, lead time, safety stock, target stock, and a reporting indicator. The intended accounting check is:
 
-## Tools Used
-
-Python (Pandas, NumPy, Matplotlib, Seaborn, Scikit-learn) · Jupyter Notebook · Power BI Desktop
-
-## Key Findings
-
-*(All figures computed directly in `notebooks/medicine_stockout_analysis.ipynb` — see the notebook for full facility- and medicine-level breakdowns.)*
-
-1. **Stock-outs are heavily concentrated in a few medicines, not spread evenly.** TB Combination Therapy stocked out in **61%** of facility-months and ARVs in **43%** — both low-volume, long-lead-time (28–30 day), centrally procured items. By contrast, high-volume, locally available items (Paracetamol, Amoxicillin, Cotrimoxazole, Zinc, Examination Gloves, Disposable Syringes) had a **0% stock-out rate** across the entire year. This points squarely at procurement lead time — not consumption volume — as the dominant driver of stock-out risk in this dataset.
-
-2. **Two facilities have a real reporting-completeness problem.** Ngodzi Health Centre (87.1%) and Kaphatenga Health Centre (87.6%) report noticeably less completely than the other eight facilities (all ≥96.6%) — this is a genuine, detectable pattern, not an evenly-distributed data-quality issue.
-
-3. **As of the latest month (December 2025), 65 of 130 facility-medicine combinations (50%) are either at risk (<1 month of stock) or already stocked out**, and 7 combinations are in active stock-out. This is the kind of number that would justify a district-level review, not a routine footnote.
-
-4. **No overstocking was found anywhere in the dataset (0 of 1,560 facility-months) — and this is itself a finding worth stating plainly, not hiding.** The simulation's order-up-to reorder policy structurally caps maximum stock at roughly 30–50 days above safety stock, so it can't produce more than ~3 months of stock on hand even right after a delivery. This means the dataset, as designed, cannot demonstrate the overstocking scenario the project brief asked about — a real facility could still overstock (e.g. after an emergency donation or a demand-forecast error), but nothing in this simulation creates that scenario. See `dashboard/powerbi_dashboard_documentation.md` Section 5 for the dashboard treatment of this caveat.
-
-5. **Malaria RDTs and Artemether/Lumefantrine account for the largest expiry values** ($258 and $179 of the year's $880 total, synthetic figures) — both are the seasonal, malaria-related items, consistent with demand swinging with the rainy season and leaving surplus stock in the off-season.
-
-6. **Delayed deliveries measurably coincide with worse stock positions on arrival.** Comparing delivery events: deliveries that were delayed arrive to lower average closing stock than on-time deliveries, and a higher share of delayed arrivals occur right at or after a stock-out — direct evidence that delivery delays are translating into real facility-level stock-out exposure, not just a paperwork problem.
-
-## Modest Stock-Out Risk Classifier
-
-A single logistic regression predicts whether a facility-medicine combination will be at-risk or stocked-out *next* month, using 5 features available *this* month (months of stock, average consumption, lead time, reporting completeness, delayed-order count). Deliberately kept simple — one model, a plain train/test split, no hyperparameter tuning — as a bridge toward more ML-focused later portfolio projects rather than the centerpiece of this one. Full results and a coefficient sanity-check are in the notebook.
-
-## Power BI Dashboard
-
-The dashboard has now been built in Power BI Desktop and is included in this repository.
-
-- Dashboard file: `dashboard/Medicine_Stockout_Dashboard_Salima.pbix`
-- Documentation: `dashboard/powerbi_dashboard_documentation.md`
-- Page exports: `visuals/charts/`
-
-The report is organized around a district-level decision workflow and includes the key pages described in the implementation guide:
-- Executive Overview
-- Inventory Monitoring
-- Stock-Out Analysis
-- Forecast & Risk
-
-The dashboard also carries the important caveat that no overstocked facility-medicine combinations exist in this synthetic dataset, and surfaces the delayed-delivery finding directly rather than leaving it as a hidden notebook-only result.
-
-## Project Structure
-
-```
-medicine-stockout-analysis/
-├── data/
-│   ├── raw/
-│   │   └── daily_stock_ledger_synthetic.csv        # 47,450-row daily bin-card simulation, with injected issues
-│   └── processed/
-│       └── monthly_stock_summary_clean.csv          # Cleaned monthly Facility x Medicine table (analytical source of truth)
-├── dashboard/
-│   ├── Medicine_Stockout_Dashboard_Salima.pbix     # Power BI dashboard (built)
-│   └── powerbi_dashboard_documentation.md          # Dashboard implementation guide
-├── notebooks/
-│   └── medicine_stockout_analysis.ipynb             # Full workflow, executed with real outputs
-├── visuals/
-│   └── charts/                                      # Dashboard screenshots and analysis charts
-├── requirements.txt
-├── README.md
-└── .gitignore
+```text
+Closing stock = Opening stock + Receipts + Adjustments - Issues - Losses
 ```
 
-## How to Run
+The validator reports discrepancies against this identity; it does not repair the records. The scenario CSVs are simple scenario transformations of the generated baseline, not full supply-chain re-simulations. In particular, transformed scenario rows may no longer balance under the ledger identity, so validate a scenario before treating its derived indicators as meaningful.
+
+The generated analysis output is an enriched row-level ledger with derived indicators; despite the `build_monthly_summary` function name, that command does not aggregate daily records into a monthly table. The separate `data/processed/monthly_stock_summary_clean.csv` is the monthly table used by the notebook-era analysis.
+
+## Repository Map
+
+```text
+app/
+	main.py                         Streamlit stock-out decision-support view
+data/
+	raw/                            Notebook-era synthetic daily ledger
+	processed/                      Notebook-era monthly analytical table
+	generated/                      CLI-generated baseline and scenario ledgers
+	quality/                        Validation report output
+docs/                             Methodology, architecture, audit, and data notes
+dashboard/                        Power BI report, exported page images, and guide
+models/                           Saved baseline classifier artifact
+notebooks/                         Exploratory analysis notebook
+outputs/                           Generated analysis summary CSV
+sql/                               Example analytical SQL queries
+src/
+	analytics/                       Inventory calculations and analysis command
+	data/                            Synthetic data generation and validation
+	models/                          Baseline model training and evaluation
+tests/                              Automated inventory-core tests
+visuals/charts/                    Notebook-era analytical chart exports
+```
+
+## Setup
+
+Run commands from the repository root (the directory containing `requirements.txt`):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+On macOS or Linux, activate the environment with `source .venv/bin/activate` instead. Python 3.10 or newer is recommended for the syntax used by the source files.
+
+## Reproduce the Python Workflow
+
+Generate four synthetic ledger files with the default seed:
 
 ```bash
-git clone <this-repo>
-cd medicine-stockout-analysis
-pip install -r requirements.txt
-
-# Explore the analysis notebook
-jupyter notebook notebooks/medicine_stockout_analysis.ipynb
-
-# Open the completed Power BI file
-# dashboard/Medicine_Stockout_Dashboard_Salima.pbix
+python -m src.data.generate --output-dir data/generated --seed 42
 ```
 
-## Ethical Considerations
+Validate the baseline and write a CSV of reported issues:
 
-Facility names are real and verified (World Bank Malawi Master Health Facility List) to ground the project in genuine Salima District geography. Every stock level, consumption figure, delivery event, and stock-out is entirely synthetic. This project makes no claim about actual medicine availability at any named facility, and should never be read as representing real supply chain performance in Salima District.
+```bash
+python -m src.data.validate data/generated/baseline_inventory_ledger.csv --output data/quality/validation_issues.csv
+```
 
-## Portfolio Relevance
+Build the row-level analysis output:
 
-Demonstrates skills relevant to: Data Technician · Supply Chain/Logistics Analyst · Data Analyst · Monitoring & Evaluation roles — specifically inventory analytics, KPI design, root-cause investigation (lead time vs. volume as stock-out drivers), and a defensible first step into predictive modeling. This project also shows the ability to move from Python-based analysis into a polished dashboard deliverable suitable for stakeholder communication.
+```bash
+python -m src.analytics.run_analysis --input data/generated/baseline_inventory_ledger.csv --output outputs/summary.csv
+```
 
-## Future Improvements
+Train the baseline classifier and run its current evaluation command:
 
-- Add a second scenario that can actually produce overstocking (e.g. emergency donation or forecast error) to demonstrate the overstock logic in practice
-- Extend the risk classifier with a second model (e.g. random forest) and compare performance
-- Add deeper drill-through pages or a custom tooltip layer in the dashboard for facility-level investigations
-- If real, properly aggregated district stock-status data ever becomes available, validate whether the same lead-time-driven stock-out pattern holds
+```bash
+python -m src.models.train --input outputs/summary.csv --output-dir models/
+python -m src.models.evaluate --input outputs/summary.csv --model models/baseline_logistic_regression.joblib
+```
 
-## Author
+Run the automated tests:
 
-Chico Mkandawire
-MSc Data Science, Malawi University of Science and Technology (in progress)
-BSc Management Information Systems, Malawi University of Business and Applied Sciences
+```bash
+python -m pytest -q
+```
+
+The generator defaults to seed `42`; pass another integer to create a different deterministic run. The validation and analysis commands accept explicit input and output paths, so generated artifacts can be kept separate when comparing runs.
+
+## Open the Streamlit App
+
+Generate the input data first, then start the app from the repository root:
+
+```bash
+streamlit run app/main.py
+```
+
+The app lets a user select a generated ledger, facility, and medicine. It displays the latest row's closing stock, days of stock, and status, alongside a recent movement table. It is a compact review interface, not a forecasting service or a replacement for inventory-management software.
+
+## Notebook and Power BI
+
+The [analysis notebook](notebooks/medicine_stockout_analysis.ipynb) contains the exploratory workflow for the notebook-era data. Its companion artifacts are the [processed monthly table](data/processed/monthly_stock_summary_clean.csv) and [chart exports](visuals/charts/). The notebook is exploratory; the reproducible Python CLI is the separate workflow described above.
+
+The Power BI report is included as [Medicine_Stockout_Dashboard_Salima.pbix](dashboard/Medicine_Stockout_Dashboard_Salima.pbix). Page screenshots are available for the [dashboard overview](dashboard/Dashboard_Home.png), [inventory monitoring](dashboard/Inventory_Monitoring.png), [stock-out analysis](dashboard/Stock_Out_Analysis.png), and [forecast and risk page](dashboard/Forecast_&_Risk.png). Open the PBIX file in Power BI Desktop to interact with the report. The [dashboard documentation](dashboard/powerbi_dashboard_documentation.md) describes its data model and intended measures; some implementation notes in that guide may not reflect the final saved report.
+
+![Power BI dashboard overview](dashboard/Dashboard_Home.png)
+
+## Inventory Rules and Model Scope
+
+The Python inventory module implements these calculations:
+
+- **Days of stock:** usable stock divided by average daily consumption; zero or missing consumption produces zero days because no reliable coverage estimate is available.
+- **Reorder point:** expected demand during lead time plus safety stock.
+- **Reorder quantity:** target stock minus on-hand and incoming stock, floored at zero.
+- **Inventory status:** a rule-based label (`confirmed_stockout`, `low_stock_warning`, or `adequate`) based on stock, days of stock, lead time, and safety-stock inputs.
+
+The logistic-regression code is a baseline demonstration, not a validated next-month stock-out forecast. Its target is constructed from the same row's rule-based `stock_status`; training uses a random row split, and the evaluation command scores the input rows supplied to it, including rows that may have been used for training. As implemented, these metrics should not be read as independent predictive performance. A future forecasting evaluation would need a time-based target, chronological holdout, and leakage-safe features.
+
+## Current Scope and Follow-Up Work
+
+The repository includes the artifacts and components listed above, but it is not a production-ready or fully validated analytics product. Remaining work for a stronger operational or forecasting claim includes:
+
+- Make the scenario generator recalculate complete ledger trajectories after changing demand or deliveries.
+- Handle missing or stale reports explicitly in the derived status output instead of inferring a confirmed stock-out from zero or unavailable consumption.
+- Add a leakage-safe chronological model evaluation against a future-period target.
+- Validate business rules and results with appropriate real-world, privacy-protected data before any operational use.
+- Reconcile the documentation and data contracts across the notebook, generated Python workflow, and Power BI report.
+- Add a real database-loading layer if the SQL examples are to be run as a connected analytics pipeline.
+
+These items are identified as follow-up work rather than presented as finished functionality.
+
+## Documentation
+
+- [Project audit](docs/PROJECT_AUDIT.md)
+- [Implementation status](docs/IMPLEMENTATION_STATUS.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Methodology](docs/METHODOLOGY.md)
+- [Data dictionary](docs/DATA_DICTIONARY.md)
+- [Assumptions and limitations](docs/ASSUMPTIONS_AND_LIMITATIONS.md)
+- [Reproducibility notes](docs/REPRODUCIBILITY.md)
+- [Power BI documentation](dashboard/powerbi_dashboard_documentation.md)
+
+## Intended Use
+
+This repository is suitable as a learning and portfolio demonstration of Python data processing, inventory KPI design, validation rules, exploratory analysis, SQL literacy, basic classification, and dashboard communication. It is not a clinical tool, an official Malawi health-sector report, or evidence of real stock-out rates. Any real-world deployment would require domain review, reliable source data, privacy and security controls, monitoring, and validation with the responsible health-supply-chain stakeholders.
