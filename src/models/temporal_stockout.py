@@ -113,6 +113,7 @@ def fit_temporal_baseline(
     labelled: pd.DataFrame,
     test_fraction: float = 0.2,
     purge_days: int = 30,
+    horizon_days: int = 30,
 ) -> tuple[object, dict, TemporalSplit]:
     """Fit a leakage-conscious logistic baseline and evaluate only future rows."""
     from sklearn.impute import SimpleImputer
@@ -161,6 +162,6 @@ def fit_temporal_baseline(
         "average_precision": float(average_precision_score(truth, probability)),
         "features": features,
         "target_definition": "reported confirmed stock-out in the subsequent horizon",
-        "horizon_days": int(split.purge_days),
+        "horizon_days": int(horizon_days),
     }
     return model, metrics, split
