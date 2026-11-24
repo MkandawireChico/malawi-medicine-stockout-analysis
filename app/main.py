@@ -54,7 +54,7 @@ summary["avg_daily_consumption"] = (
     .transform(lambda values: values.rolling(30, min_periods=1).mean())
 )
 summary["days_of_stock"] = (
-    summary["closing_stock"] / summary["avg_daily_consumption"].replace(0, pd.NA)
+    summary["closing_stock"] / summary["avg_daily_consumption"].where(summary["avg_daily_consumption"] > 0)
 ).fillna(0).clip(lower=0)
 summary["reorder_point"] = (
     summary["avg_daily_consumption"] * summary["lead_time_days"] + summary["safety_stock"]
@@ -63,9 +63,13 @@ summary["reorder_quantity"] = (
     summary["target_stock"] - summary["closing_stock"] - summary["received"]
 ).clip(lower=0)
 summary["stock_status"] = summary.apply(
-    lambda row: detect_stockout_status(
-        row["closing_stock"], row["days_of_stock"],
-        row["lead_time_days"], row["safety_stock"]
+    lambda row: (
+        "unknown"
+        if not bool(row.get("reported", True)) or row["avg_daily_consumption"] <= 0
+        else detect_stockout_status(
+            row["closing_stock"], row["days_of_stock"],
+            row["lead_time_days"], row["safety_stock"]
+        )
     ), axis=1
 )
 latest_date = summary["date"].max()
