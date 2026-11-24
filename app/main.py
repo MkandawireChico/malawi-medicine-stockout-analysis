@@ -16,7 +16,7 @@ file_options = [p for p in base_path.glob("*_inventory_ledger.csv")] if base_pat
 selected = st.selectbox("Dataset", [p.name for p in file_options] or ["No generated data found"], index=0)
 
 if selected == "No generated data found":
-    st.warning("No synthetic dataset is present yet. Run the data generator first.")
+    st.warning("No generated ledger is available yet. Run the data generator first.")
     st.stop()
 
 ledger = pd.read_csv(base_path / selected)
