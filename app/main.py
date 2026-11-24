@@ -11,6 +11,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.analytics.run_analysis import build_monthly_summary
+from src.analytics.inventory import detect_stockout_status
 from src.data.generate import generate_ledger
 
 st.set_page_config(page_title="Medicine Stock-Out Decision Support", page_icon="💊", layout="wide")
@@ -45,6 +46,28 @@ if summary.empty:
     st.stop()
 
 summary["date"] = pd.to_datetime(summary["date"], errors="coerce")
+# The source rows are daily. Estimate consumption from a trailing 30-record
+# window per facility/medicine instead of dividing one day's issues by 30.
+summary = summary.sort_values(["facility_id", "medicine_id", "date"]).copy()
+summary["avg_daily_consumption"] = (
+    summary.groupby(["facility_id", "medicine_id"])["issued"]
+    .transform(lambda values: values.rolling(30, min_periods=1).mean())
+)
+summary["days_of_stock"] = (
+    summary["closing_stock"] / summary["avg_daily_consumption"].replace(0, pd.NA)
+).fillna(0).clip(lower=0)
+summary["reorder_point"] = (
+    summary["avg_daily_consumption"] * summary["lead_time_days"] + summary["safety_stock"]
+)
+summary["reorder_quantity"] = (
+    summary["target_stock"] - summary["closing_stock"] - summary["received"]
+).clip(lower=0)
+summary["stock_status"] = summary.apply(
+    lambda row: detect_stockout_status(
+        row["closing_stock"], row["days_of_stock"],
+        row["lead_time_days"], row["safety_stock"]
+    ), axis=1
+)
 latest_date = summary["date"].max()
 snapshot = (summary.sort_values("date")
             .groupby(["facility_id", "medicine_id"], as_index=False)
@@ -79,7 +102,7 @@ with tab_overview:
                 stockouts, low_stock, adequate, int(status_counts.get("unknown", 0))
             ],
         }).set_index("Status")
-        st.bar_chart(status_frame, horizontal=True)
+        st.bar_chart(status_frame)
     with right:
         st.subheader("Facilities requiring attention")
         attention = snapshot[snapshot["stock_status"].isin(["confirmed_stockout", "low_stock_warning"])]
