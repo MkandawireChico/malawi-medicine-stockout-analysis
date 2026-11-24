@@ -6,13 +6,22 @@ import pandas as pd
 import streamlit as st
 
 from src.analytics.run_analysis import build_monthly_summary
+from src.data.generate import generate_ledger
 
 
 st.set_page_config(page_title="Medicine Stock-Out Dashboard", layout="wide")
 st.title("Medicine Stock-Out Decision Support")
 
 base_path = Path("data/generated")
-file_options = [p for p in base_path.glob("*_inventory_ledger.csv")] if base_path.exists() else []
+base_path.mkdir(parents=True, exist_ok=True)
+baseline_path = base_path / "baseline_inventory_ledger.csv"
+
+# Streamlit Cloud starts from a clean checkout, so create the reproducible
+# baseline ledger on first launch when no generated files are present.
+if not list(base_path.glob("*_inventory_ledger.csv")):
+    generate_ledger(seed=42).to_csv(baseline_path, index=False)
+
+file_options = sorted(base_path.glob("*_inventory_ledger.csv"))
 selected = st.selectbox("Dataset", [p.name for p in file_options] or ["No generated data found"], index=0)
 
 if selected == "No generated data found":
