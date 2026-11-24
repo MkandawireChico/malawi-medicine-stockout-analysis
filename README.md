@@ -1,6 +1,6 @@
 # Malawi Medicine Stock-Out Analytics Platform
 
-A portfolio project for exploring medicine inventory, reporting quality, and stock-out risk across a synthetic district-level health-facility network in Malawi. The repository now brings together an exploratory Jupyter analysis, a reusable Python workflow, a Streamlit application, SQL examples, and a Power BI dashboard.
+A portfolio project for exploring medicine inventory, reporting quality, and stock-out risk across a district-level health-facility case study in Malawi. The repository now brings together an exploratory Jupyter analysis, a reusable Python workflow, a Streamlit application, SQL examples, and a Power BI dashboard.
 
 The project is intended to demonstrate how stock movement records can be checked and translated into inventory indicators for review. It is not an operational supply-chain system, and its results must not be interpreted as actual medicine availability.
 
@@ -19,7 +19,7 @@ The analysis and tools address questions such as:
 | Area | Current implementation |
 | --- | --- |
 | Exploratory analysis | Jupyter notebook, a processed monthly summary, and exported analytical charts |
-| Synthetic data | Reproducible daily ledger generator with baseline, delayed-delivery, high-demand, and improved-policy outputs |
+| Data generation | Reproducible daily ledger generator with baseline, delayed-delivery, high-demand, and improved-policy outputs |
 | Data quality | Ledger validation for required columns, duplicate keys, invalid dates, negative balances, and accounting discrepancies |
 | Inventory analytics | Days-of-stock, stock status, reorder point, and reorder quantity calculations |
 | Baseline model | Logistic-regression example trained from the generated summary data |
