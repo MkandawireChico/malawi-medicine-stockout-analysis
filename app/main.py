@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 import pandas as pd
 import streamlit as st
+
+# Streamlit Cloud may execute this file with app/ as the import root.
+# Add the repository root so the src package can be imported reliably.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from src.analytics.run_analysis import build_monthly_summary
 from src.data.generate import generate_ledger
@@ -12,7 +19,7 @@ from src.data.generate import generate_ledger
 st.set_page_config(page_title="Medicine Stock-Out Dashboard", layout="wide")
 st.title("Medicine Stock-Out Decision Support")
 
-base_path = Path("data/generated")
+base_path = REPO_ROOT / "data" / "generated"
 base_path.mkdir(parents=True, exist_ok=True)
 baseline_path = base_path / "baseline_inventory_ledger.csv"
 
